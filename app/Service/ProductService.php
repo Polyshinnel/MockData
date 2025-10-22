@@ -47,7 +47,7 @@ class ProductService
 
         $filter = [
             'sku' => $billProduct['sku'],
-            'provider' => $provider,
+            'provider_id' => $provider,
         ];
         $products = Products::where($filter)->get();
 

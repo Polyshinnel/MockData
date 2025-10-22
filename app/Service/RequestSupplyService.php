@@ -65,7 +65,7 @@ class RequestSupplyService
         $supplyRequest = $this->createSupplyRequest($productToSupply, $activeSupply);
 
         //Добавляем продукты в заявку
-        $this->addProductsToSupply($productToSupply, $supplyBox, $supplyRequest);
+        $this->addProductsToSupply($productToSupply, $supplyBox, $supplyRequest, $activeSupply);
 
         $processingInfo[]['info'] = 'Заявка на поставку успешно создана';
         return $processingInfo;
@@ -85,7 +85,7 @@ class RequestSupplyService
 
     private function getSupplyBox(Supply $supply): ?SupplyBox
     {
-        return SupplyBox::where('supply_id', $supply->id)->orderBy('created_at')->first();
+        return SupplyBox::where('supply_id', $supply->id)->orderBy('created_at', 'ASC')->first();
     }
     private function createSupply(): Supply
     {
@@ -116,13 +116,15 @@ class RequestSupplyService
     private function addProductsToSupply(
         array $productsToSupply,
         SupplyBox $supplyBox,
-        SupplyRequest $supplyRequest
+        SupplyRequest $supplyRequest,
+        Supply $supply
     ): void
     {
         foreach ($productsToSupply as $productToSupply) {
             $createArr = [
                 'supply_bill_id' => null,
                 'supply_box_id' => $supplyBox->id,
+                'supply_id' => $supply->id,
                 'supply_request_id' => $supplyRequest->id,
                 'plan_quantity' => $productToSupply['quantity'],
                 'plan_price' => $productToSupply['price'],

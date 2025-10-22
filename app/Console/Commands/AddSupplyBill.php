@@ -2,10 +2,18 @@
 
 namespace App\Console\Commands;
 
+use App\Service\BillSupplyService;
 use Illuminate\Console\Command;
 
 class AddSupplyBill extends Command
 {
+    private BillSupplyService $billSupplyService;
+
+    public function __construct(BillSupplyService $billSupplyService)
+    {
+        $this->billSupplyService = $billSupplyService;
+        parent::__construct();
+    }
     /**
      * The name and signature of the console command.
      *
@@ -40,7 +48,7 @@ class AddSupplyBill extends Command
                 [
                     'name' => 'Тестовый товар 2',
                     'sku' => 'asd123',
-                    'quantity' => 1,
+                    'quantity' => 4,
                     'price' => 600
                 ],
                 [
@@ -52,5 +60,17 @@ class AddSupplyBill extends Command
             ]
         ];
 
+        $result = $this->billSupplyService->processingSupplyBill($billData);
+        if(isset($result['errors'])) {
+            foreach($result['errors'] as $error) {
+                $this->error($error);
+            }
+        }
+
+        if(isset($result['message'])) {
+            foreach($result['message'] as $message) {
+                $this->error($message);
+            }
+        }
     }
 }

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('supply_bill_id')->nullable();
             $table->unsignedBigInteger('supply_box_id');
+            $table->unsignedBigInteger('supply_id')->nullable();
             $table->unsignedBigInteger('supply_request_id')->nullable();
             $table->integer('plan_quantity');
             $table->decimal('plan_price');
