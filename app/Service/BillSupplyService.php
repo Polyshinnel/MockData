@@ -64,6 +64,65 @@ class BillSupplyService
         return $billProcessingData;
     }
 
+    public function deleteSupplyBill($supplyId, $billId): array
+    {
+        $result = [];
+        
+        $supplyBill = SupplyBill::where([
+            'id' => $billId,
+            'supply_id' => $supplyId
+        ])->first();
+        
+        if (!$supplyBill) {
+            $result['errors'][] = 'Счет не найден';
+            return $result;
+        }
+        
+        $supplyProducts = SupplyProducts::where('supply_bill_id', $billId)
+            ->orderBy('created_at', 'DESC')
+            ->get();
+        
+        foreach ($supplyProducts as $product) {
+            if ($product->supply_request_id !== null && $product->plan_quantity > 0) {
+                $originalProduct = SupplyProducts::where([
+                    'supply_request_id' => $product->supply_request_id,
+                    'product_id' => $product->product_id,
+                    'supply_id' => $supplyId
+                ])
+                    ->where('id', '!=', $product->id)
+                    ->where('plan_quantity', '>', 0)
+                    ->first();
+                
+                if ($originalProduct) {
+                    $originalProduct->update([
+                        'plan_quantity' => $originalProduct->plan_quantity + $product->plan_quantity
+                    ]);
+                }
+                
+                $product->delete();
+            } elseif ($product->supply_request_id !== null && $product->plan_quantity == 0) {
+                $product->update([
+                    'supply_bill_id' => null,
+                    'fact_quantity' => 0,
+                    'fact_price' => 0,
+                ]);
+            } elseif ($product->supply_request_id === null && $product->plan_quantity == 0) {
+                $product->delete();
+            } else {
+                $product->update([
+                    'supply_bill_id' => null,
+                    'fact_quantity' => 0,
+                    'fact_price' => 0,
+                ]);
+            }
+        }
+        
+        $supplyBill->delete();
+        
+        $result['message'] = 'Счет успешно удален';
+        return $result;
+    }
+
     private function getFilteredSupplyProducts($billProduct, $supplyId): ?Collection
     {
         $filter = [
